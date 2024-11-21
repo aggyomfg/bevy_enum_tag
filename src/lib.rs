@@ -78,7 +78,9 @@ pub fn derive_enum_tag(_attr: TokenStream, input: TokenStream) -> TokenStream {
                     fn enter_hook(mut world: bevy::ecs::world::DeferredWorld,
                         entity: bevy::ecs::entity::Entity,
                         id: bevy::ecs::component::ComponentId) {
-                        if !world.entity(entity).contains::<#ident>() {
+                        if let Some(#ident::#variant_idents) = world.entity(entity).get::<#ident>() {
+
+                        } else {
                             world.commands().entity(entity).remove_by_id(id);
                         }
                     }
