@@ -7,7 +7,7 @@ This crate provides a macro that makes it easier to filter for a specific varian
 This crate is similar to [bevy_enum_filter](https://github.com/MrGVSV/bevy_enum_filter), but doesn't rely on change detection.
 
 When you use the `derive_enum_tag` macro, marker structs are generated for every variant of the enum. The macro also adds 
-[component hooks](https://github.com/bevyengine/bevy/pull/14005) that insert/remove the correct markers whenever the enum component is removed.
+[component hooks](https://github.com/bevyengine/bevy/pull/14005) that insert/remove the correct markers whenever the enum component is inserted/removed.
 Because of this feature, you will have to use at least Bevy 0.15 (currently only available as a release candidate).
 
 The marker structs are generated in their own module, which is named using the snake case version of the enum's name. See the examples below for clarification.
