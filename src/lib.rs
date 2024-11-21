@@ -41,7 +41,7 @@ pub fn derive_enum_tag(_attr: TokenStream, input: TokenStream) -> TokenStream {
         impl #ident {
             fn enter_hook(mut world: bevy::ecs::world::DeferredWorld, 
                     entity: bevy::ecs::entity::Entity, 
-                    id: bevy::ecs::component::ComponentId) {
+                    _id: bevy::ecs::component::ComponentId) {
                 match world.entity(entity).components::<&#ident>() {
                     #(
                         #ident::#variant_idents { .. } => {
@@ -53,7 +53,7 @@ pub fn derive_enum_tag(_attr: TokenStream, input: TokenStream) -> TokenStream {
             }
             fn exit_hook(mut world: bevy::ecs::world::DeferredWorld, 
                     entity: bevy::ecs::entity::Entity, 
-                    id: bevy::ecs::component::ComponentId) {
+                    _id: bevy::ecs::component::ComponentId) {
                 match world.entity(entity).components::<&#ident>() {
                     #(
                         #ident::#variant_idents { .. } => {
@@ -66,9 +66,29 @@ pub fn derive_enum_tag(_attr: TokenStream, input: TokenStream) -> TokenStream {
         }
 
         #vis mod #mod_ident {
+            use super::#ident;
             #(
                 #[derive(#bevy::prelude::Component)]
+                #[component(on_insert = #variant_idents::enter_hook)]
+                #[component(on_remove = #variant_idents::exit_hook)]
                 pub struct #variant_idents;
+
+                impl #variant_idents {
+                    fn enter_hook(mut world: bevy::ecs::world::DeferredWorld,
+                        entity: bevy::ecs::entity::Entity,
+                        id: bevy::ecs::component::ComponentId) {
+                        if !world.entity(entity).contains::<#ident>() {
+                            world.commands().entity(entity).remove_by_id(id);
+                        }
+                    }
+                    fn exit_hook(mut world: bevy::ecs::world::DeferredWorld,
+                            entity: bevy::ecs::entity::Entity,
+                            _id: bevy::ecs::component::ComponentId) {
+                        if world.entity(entity).contains::<#ident>() {
+                            world.commands().entity(entity).remove::<#ident>();
+                        }
+                    }
+                }
             )*
         }
     })

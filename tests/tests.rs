@@ -10,6 +10,7 @@ mod tests {
     enum TestEnum {
         Variant1,
         Variant2,
+        Variant3,
     }
 
     fn spawn_test_enum(mut commands: Commands) {
@@ -19,29 +20,45 @@ mod tests {
 
     use test_enum::Variant1;
     use test_enum::Variant2;
-    
+
     fn check_enum_tags(query1: Query<&TestEnum, With<Variant1>>,
                        query2: Query<&TestEnum, With<Variant2>>) {
         assert!(!query1.is_empty());
         assert!(!query2.is_empty());
     }
 
-    fn remove_test_enum(mut commands: Commands, query: Query<Entity, With<TestEnum>>) {
+    fn remove_variant1(mut commands: Commands, query: Query<Entity, With<Variant1>>) {
         query.iter().for_each(|entity| {
             commands.entity(entity).remove::<TestEnum>();
         });
     }
 
-    fn check_tags_removed(query1: Query<Entity, With<Variant1>>,
-                          query2: Query<Entity, With<Variant2>>) {
-        assert!(query1.is_empty());
-        assert!(query2.is_empty());
+    fn check_variant1_removed(query: Query<Entity, With<Variant1>>) {
+        assert!(query.is_empty());
+    }
+
+    fn remove_variant_2(mut commands: Commands, query: Query<Entity, With<Variant2>>) {
+        query.iter().for_each(|entity| {
+            commands.entity(entity).remove::<Variant2>();
+        })
+    }
+
+    fn check_variant2_removed(query: Query<&TestEnum>) {
+        assert!(query.is_empty());
+    }
+
+    fn insert_tag_should_auto_remove(mut commands: Commands) {
+        commands.spawn(test_enum::Variant3);
+    }
+
+    fn check_tag_auto_removed(query: Query<Entity, With<test_enum::Variant3>>) {
+        assert!(query.is_empty());
     }
 
     #[test]
     fn test_enum_tags() {
         let mut app = App::new();
-        app.add_systems(Update, (spawn_test_enum, check_enum_tags, remove_test_enum, check_tags_removed).chain());
+        app.add_systems(Update, (spawn_test_enum, check_enum_tags, remove_variant1, check_variant1_removed, remove_variant_2, check_variant2_removed, insert_tag_should_auto_remove, check_tag_auto_removed).chain());
         app.update();
     }
 }
