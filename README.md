@@ -4,8 +4,7 @@ This crate provides a macro that makes it easier to filter for a specific varian
 
 ## How it works
 
-This crate is similar to [bevy_enum_filter](https://github.com/MrGVSV/bevy_enum_filter), but doesn't rely on change detection or require you to register anything
-with the Bevy app.
+This crate is similar to [bevy_enum_filter](https://github.com/MrGVSV/bevy_enum_filter), but doesn't rely on change detection.
 
 When you use the `derive_enum_tag` macro, marker structs are generated for every variant of the enum. The macro also adds 
 [component hooks](https://github.com/bevyengine/bevy/pull/14005) that insert/remove the correct markers whenever the enum component is removed.
@@ -43,7 +42,7 @@ fn spawn_test_enums(mut commands: Commands) {
 ```
 
 
-Since the tag is just a marker component, you can use any QueryFilter:
+Since the tag is just a marker component, you can use any `QueryFilter`:
 ```Rust
 use test_enum::Variant1;
 use test_enum::Variant2;
@@ -54,11 +53,11 @@ fn added_variant_1(query: Query<&TestEnum, Added<Variant1>>) {
 }
 
 fn with_variant_2(query: Query<&TestEnum, With<Variant2>>) {
-    // with variant 2
+    // is variant 2
 }
 
 fn without_variant_3(query: Query<&TestEnum, Without<Variant3>>) {
-    // without variant 3
+    // is not variant 3
 }
 ```
 
