@@ -69,6 +69,7 @@ pub fn derive_enum_tag(_attr: TokenStream, input: TokenStream) -> TokenStream {
             use super::#ident;
             #(
                 #[derive(#bevy::prelude::Component)]
+                #[component(on_add = #variant_idents::enter_hook)]
                 #[component(on_insert = #variant_idents::enter_hook)]
                 #[component(on_remove = #variant_idents::exit_hook)]
                 pub struct #variant_idents;
