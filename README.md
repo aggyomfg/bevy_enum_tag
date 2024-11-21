@@ -19,7 +19,7 @@ You can use the `derive_enum_tag` macro with any enum:
 ```Rust
 use bevy_enum_tag::derive_enum_tag;
 
-#[derive_enum_tag]
+#[derive_enum_tag]  // no tags or hooks generated
 enum EmptyEnum {}
 
 #[derive_enum_tag]  // derives Component, so TestEnum is now a component
