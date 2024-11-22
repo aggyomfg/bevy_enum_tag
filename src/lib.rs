@@ -23,7 +23,6 @@ pub fn derive_enum_tag(attr: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let ident = &input.ident;
     let vis = &input.vis;
-    let bevy = get_crate("bevy");
 
     let Data::Enum(ref data) = input.data else {
         return syn::Error::new(
@@ -81,7 +80,7 @@ pub fn derive_enum_tag(attr: TokenStream, input: TokenStream) -> TokenStream {
         #vis mod #mod_ident {
             use super::#ident;
             #(
-                #[derive(#bevy::prelude::Component)]
+                #[derive(bevy::prelude::Component)]
                 #[component(on_add = #variant_idents::enter_hook)]
                 #[component(on_insert = #variant_idents::enter_hook)]
                 #[component(on_remove = #variant_idents::exit_hook)]
@@ -108,16 +107,4 @@ pub fn derive_enum_tag(attr: TokenStream, input: TokenStream) -> TokenStream {
             )*
         }
     })
-}
-
-fn get_crate(name: &str) -> proc_macro2::TokenStream {
-    let found_crate = crate_name(name).expect(&format!("`{}` is present in `Cargo.toml`", name));
-
-    match found_crate {
-        FoundCrate::Itself => quote!(crate),
-        FoundCrate::Name(name) => {
-            let ident = format_ident!("{}", &name);
-            quote!( #ident )
-        }
-    }
 }
