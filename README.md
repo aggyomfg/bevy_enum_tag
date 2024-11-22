@@ -1,6 +1,6 @@
 # bevy_enum_tag
 
-This crate provides a macro that makes it easier to filter for a specific variant of an enum component.
+This crate provides a macro that makes it easier to query for a specific variant of an enum component.
 
 ## How it works
 
@@ -81,7 +81,7 @@ fn check_tags_removed(query1: Query<Entity, With<Variant1>>, query2: Query<Entit
 ```
 
 The generated module inherits the visibility of the enum.
-By default, the visibility of the tag structs is `pub`. To change this you can set `tag_visibility`.
+By default, the visibility of the tag components is `pub`. To change this you can set `tag_visibility`.
 
 The example here:
 ```Rust
