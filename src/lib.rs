@@ -1,7 +1,6 @@
 use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use proc_macro2::Span;
-use proc_macro_crate::{crate_name, FoundCrate};
 use quote::{format_ident, quote};
 use syn::spanned::Spanned;
 use syn::{parse_macro_input, Data, DeriveInput, Token, Visibility};
