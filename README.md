@@ -79,3 +79,34 @@ fn check_tags_removed(query1: Query<Entity, With<Variant1>>, query2: Query<Entit
     assert!(query2.is_empty());
 }
 ```
+
+The generated module inherits the visibility of the enum.
+By default, the visibility of the tag structs is `pub`. To change this you can set `tag_visibility`.
+
+The example here:
+```Rust
+#[derive_enum_tag(tag_visibility=pub(super))]
+pub enum Health {
+    Immortal,
+    Mortal {
+        max: u32,
+    },
+}
+```
+
+Generates this module:
+```Rust
+pub mod health {
+    #[derive(Component)]
+    // omitted
+    pub(super) struct Immortal;
+
+    // generated hooks for Immortal
+    
+    #[derive(Component)]
+    // omitted
+    pub(super) struct Mortal;
+
+    // generated hooks for Mortal
+}
+```
