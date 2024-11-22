@@ -13,6 +13,7 @@ mod tests {
         Variant3 {
             foo: i32,
         },
+        Variant4(i32),
     }
 
     fn spawn_test_enum(mut commands: Commands) {
