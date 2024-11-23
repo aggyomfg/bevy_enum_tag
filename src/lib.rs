@@ -45,9 +45,7 @@ pub fn derive_enum_tag(attr: TokenStream, input: TokenStream) -> TokenStream {
         #[component(on_add = #ident::enter_hook)]
         #[component(on_insert = #ident::enter_hook)]
         #[component(on_remove = #ident::exit_hook)]
-        #vis enum #ident {
-            #variants
-        }
+        #input
         
         impl #ident {
             fn enter_hook(mut world: bevy::ecs::world::DeferredWorld, 
