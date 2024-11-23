@@ -29,7 +29,7 @@ pub fn derive_enum_tag(attr: TokenStream, input: TokenStream) -> TokenStream {
             "Cannot derive `EnumTrait` on non-enum type")
             .into_compile_error().into()
     };
-    
+
     let variant_idents = data
         .variants
         .iter()
@@ -49,6 +49,13 @@ pub fn derive_enum_tag(attr: TokenStream, input: TokenStream) -> TokenStream {
             fn enter_hook(mut world: bevy::ecs::world::DeferredWorld, 
                     entity: bevy::ecs::entity::Entity, 
                     _id: bevy::ecs::component::ComponentId) {
+                #(
+                    // remove previously inserted tags, if present
+                    if world.entity(entity).get::<#mod_ident::#variant_idents>().is_some() {
+                        world.commands().entity(entity).remove::<#mod_ident::#variant_idents>();
+                    }
+                )*
+
                 match world.entity(entity).components::<&#ident>() {
                     #(
                         #ident::#variant_idents { .. } => {
