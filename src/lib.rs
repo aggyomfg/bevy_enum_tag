@@ -13,7 +13,10 @@ pub fn derive_enum_tag(attr: TokenStream, input: TokenStream) -> TokenStream {
         if meta.path.is_ident("tag_visibility") {
             Ok(tag_visibility = Some(meta.value()?.parse()?).unwrap())
         } else {
-            return Err(meta.error(format!("Unsupported argument: {}", meta.path.get_ident().unwrap())));
+            return Err(meta.error(format!(
+                "Unsupported argument: {}",
+                meta.path.get_ident().unwrap()
+            )));
         }
     });
 
@@ -24,16 +27,15 @@ pub fn derive_enum_tag(attr: TokenStream, input: TokenStream) -> TokenStream {
     let vis = &input.vis;
 
     let Data::Enum(ref data) = input.data else {
-        return syn::Error::new(
-            input.span(),
-            "Cannot derive `EnumTrait` on non-enum type")
-            .into_compile_error().into()
+        return syn::Error::new(input.span(), "Cannot derive `EnumTrait` on non-enum type")
+            .into_compile_error()
+            .into();
     };
 
     let variant_idents = data
         .variants
         .iter()
-        .map(|variant| { &variant.ident })
+        .map(|variant| &variant.ident)
         .collect::<Vec<_>>();
 
     let mod_ident = format_ident!("{}", ident.to_string().to_case(Case::Snake));
@@ -44,10 +46,10 @@ pub fn derive_enum_tag(attr: TokenStream, input: TokenStream) -> TokenStream {
         #[component(on_insert = #ident::enter_hook)]
         #[component(on_remove = #ident::exit_hook)]
         #input
-        
+
         impl #ident {
-            fn enter_hook(mut world: bevy::ecs::world::DeferredWorld, 
-                    entity: bevy::ecs::entity::Entity, 
+            fn enter_hook(mut world: bevy::ecs::world::DeferredWorld,
+                    entity: bevy::ecs::entity::Entity,
                     _id: bevy::ecs::component::ComponentId) {
                 #(
                     // remove previously inserted tags, if present
@@ -65,8 +67,8 @@ pub fn derive_enum_tag(attr: TokenStream, input: TokenStream) -> TokenStream {
                     _ => {}
                 }
             }
-            fn exit_hook(mut world: bevy::ecs::world::DeferredWorld, 
-                    entity: bevy::ecs::entity::Entity, 
+            fn exit_hook(mut world: bevy::ecs::world::DeferredWorld,
+                    entity: bevy::ecs::entity::Entity,
                     _id: bevy::ecs::component::ComponentId) {
                 match world.entity(entity).components::<&#ident>() {
                     #(

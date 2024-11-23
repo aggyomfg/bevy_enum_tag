@@ -4,18 +4,22 @@ This crate provides a macro that makes it easier to query for a specific variant
 
 ## How it works
 
-This crate is similar to [bevy_enum_filter](https://github.com/MrGVSV/bevy_enum_filter), but doesn't rely on change detection.
+This crate is similar to [bevy_enum_filter](https://github.com/MrGVSV/bevy_enum_filter), but doesn't rely on change
+detection.
 
-When you use the `derive_enum_tag` macro, marker components (tags) are generated for every variant of the enum. The macro also adds 
-[component hooks](https://github.com/bevyengine/bevy/pull/14005) that insert/remove the correct markers whenever the enum component is inserted/removed.
+When you use the `derive_enum_tag` macro, marker components (tags) are generated for every variant of the enum. The
+macro also adds
+[component hooks](https://github.com/bevyengine/bevy/pull/14005) that insert/remove the correct markers whenever the
+enum component is inserted/removed.
 Because of this feature, you will have to use at least Bevy 0.15 (currently only available as a release candidate).
 
-The tags are generated in their own module, which is named using the snake case version of the enum's name. See the examples below for clarification.
+The tags are generated in their own module, which is named using the snake case version of the enum's name. See the
+examples below for clarification.
 
 ## Usage
 
-
 You can use the `derive_enum_tag` macro with any enum:
+
 ```Rust
 use bevy_enum_tag::derive_enum_tag;
 
@@ -32,8 +36,8 @@ enum TestEnum {
 }
 ```
 
-
 The tag is automatically inserted when the enum component is added to an entity:
+
 ```Rust
 fn spawn_test_enums(mut commands: Commands) {
     commands.spawn(TestEnum::Variant1);
@@ -41,8 +45,8 @@ fn spawn_test_enums(mut commands: Commands) {
 }
 ```
 
-
 Since the tag is just a component, you can use any `QueryFilter`:
+
 ```Rust
 use test_enum::Variant1;
 use test_enum::Variant2;
@@ -61,8 +65,8 @@ fn without_variant_3(query: Query<&TestEnum, Without<Variant3>>) {
 }
 ```
 
-
 Tags are automatically removed when their associated component is removed:
+
 ```Rust
 use test_enum::Variant1;
 use test_enum::Variant2;
@@ -84,6 +88,7 @@ The generated module inherits the visibility of the enum.
 By default, the visibility of the tag components is `pub`. To change this you can set `tag_visibility`.
 
 The example here:
+
 ```Rust
 #[derive_enum_tag(tag_visibility=pub(super))]
 pub enum Health {
@@ -95,6 +100,7 @@ pub enum Health {
 ```
 
 Generates this module:
+
 ```Rust
 pub mod health {
     #[derive(Component)]
