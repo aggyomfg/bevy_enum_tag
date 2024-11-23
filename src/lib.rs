@@ -85,7 +85,7 @@ pub fn derive_enum_tag(attr: TokenStream, input: TokenStream) -> TokenStream {
                 #[derive(bevy::prelude::Component)]
                 #[component(on_add = #variant_idents::enter_hook)]
                 #[component(on_insert = #variant_idents::enter_hook)]
-                #[component(on_remove = #variant_idents::exit_hook)]
+                //#[component(on_remove = #variant_idents::exit_hook)]
                 #tag_visibility struct #variant_idents;
 
                 impl #variant_idents {
@@ -98,13 +98,13 @@ pub fn derive_enum_tag(attr: TokenStream, input: TokenStream) -> TokenStream {
                             world.commands().entity(entity).remove_by_id(id);
                         }
                     }
-                    fn exit_hook(mut world: bevy::ecs::world::DeferredWorld,
-                            entity: bevy::ecs::entity::Entity,
-                            _id: bevy::ecs::component::ComponentId) {
-                        if world.entity(entity).contains::<#ident>() {
-                            world.commands().entity(entity).remove::<#ident>();
-                        }
-                    }
+                    // fn exit_hook(mut world: bevy::ecs::world::DeferredWorld,
+                    //         entity: bevy::ecs::entity::Entity,
+                    //         _id: bevy::ecs::component::ComponentId) {
+                    //     if world.entity(entity).contains::<#ident>() {
+                    //         world.commands().entity(entity).remove::<#ident>();
+                    //     }
+                    // }
                 }
             )*
         }

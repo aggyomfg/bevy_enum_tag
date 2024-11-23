@@ -46,8 +46,8 @@ mod tests {
             })
         }
 
-        fn check_variant2_removed(query: Query<&TestEnum>) {
-            assert!(query.is_empty());
+        fn check_variant2_not_removed(query: Query<&TestEnum>) {
+            assert!(!query.is_empty());
         }
 
         fn insert_tag_should_auto_remove(mut commands: Commands) {
@@ -61,7 +61,7 @@ mod tests {
         #[test]
         fn test_enum_tags() {
             let mut app = App::new();
-            app.add_systems(Update, (spawn_test_enum, check_enum_tags, remove_variant1, check_variant1_removed, remove_variant_2, check_variant2_removed, insert_tag_should_auto_remove, check_tag_auto_removed).chain());
+            app.add_systems(Update, (spawn_test_enum, check_enum_tags, remove_variant1, check_variant1_removed, remove_variant_2, check_variant2_not_removed, insert_tag_should_auto_remove, check_tag_auto_removed).chain());
             app.update();
         }
     }
