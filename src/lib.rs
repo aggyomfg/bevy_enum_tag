@@ -29,9 +29,7 @@ pub fn derive_enum_tag(attr: TokenStream, input: TokenStream) -> TokenStream {
             "Cannot derive `EnumTrait` on non-enum type")
             .into_compile_error().into()
     };
-
-    let variants = &data.variants;
-
+    
     let variant_idents = data
         .variants
         .iter()
