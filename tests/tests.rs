@@ -3,14 +3,25 @@ mod tests {
     use bevy::prelude::*;
     use bevy_enum_tag::derive_enum_tag;
 
-    #[derive_enum_tag]
-    enum EmptyEnum {}
+    // #[derive_enum_tag]
+    // enum EmptyEnum {}
+
+    #[derive(Component, Default)]
+    struct TestComponent;
+
+    // 2nd
+    #[derive(Component, Default)]
+    struct TestComponent2;
 
     #[derive_enum_tag(tag_visibility=pub(crate))]
     enum TestEnum {
+        #[require(TestComponent)]
         Variant1,
+        #[require(TestComponent, TestComponent2)]
         Variant2,
-        Variant3 { foo: i32 },
+        Variant3 {
+            foo: i32,
+        },
         Variant4(i32),
     }
 
@@ -30,14 +41,24 @@ mod tests {
         assert!(!query2.is_empty());
     }
 
+    fn check_test_component_is_with_variant1(
+        query: Query<Entity, (With<TestComponent>, With<Variant1>)>,
+    ) {
+        assert!(!query.is_empty());
+    }
+
     fn remove_variant1(mut commands: Commands, query: Query<Entity, With<Variant1>>) {
         query.iter().for_each(|entity| {
             commands.entity(entity).remove::<TestEnum>();
         });
     }
 
-    fn check_variant1_removed(query: Query<Entity, With<Variant1>>) {
+    fn check_variant1_removed(
+        query: Query<Entity, With<Variant1>>,
+        query2: Query<Entity, With<TestComponent>>,
+    ) {
         assert!(query.is_empty());
+        assert!(!query2.is_empty());
     }
 
     fn remove_variant_2(mut commands: Commands, query: Query<Entity, With<Variant2>>) {
@@ -66,6 +87,7 @@ mod tests {
             (
                 spawn_test_enum,
                 check_enum_tags,
+                check_test_component_is_with_variant1,
                 remove_variant1,
                 check_variant1_removed,
                 remove_variant_2,
