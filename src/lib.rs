@@ -82,7 +82,7 @@ pub fn derive_enum_tag(attr: TokenStream, input: TokenStream) -> TokenStream {
         }
 
         #vis mod #mod_ident {
-            use super::#ident;
+            use super::*;
             #(
                 #[derive(bevy::prelude::Component)]
                 #[component(on_add = #variant_idents::enter_hook)]
