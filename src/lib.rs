@@ -7,33 +7,37 @@ use syn::{
     parse_macro_input, Data, DeriveInput, Ident, Token, Visibility,
 };
 
-#[proc_macro_attribute]
-pub fn derive_enum_tag(attr: TokenStream, input: TokenStream) -> TokenStream {
-    let mut tag_visibility = Visibility::Public(Token![pub](Span::call_site()));
-
-    let visibility_parser = syn::meta::parser(|meta| {
-        if meta.path.is_ident("tag_visibility") {
-            Ok(tag_visibility = Some(meta.value()?.parse()?).unwrap())
-        } else {
-            return Err(meta.error(format!(
-                "Unsupported argument: {}",
-                meta.path.get_ident().unwrap()
-            )));
-        }
-    });
-
-    parse_macro_input!(attr with visibility_parser);
-
+#[proc_macro_derive(EnumComponentTag, attributes(require, tag_visibility))]
+pub fn derive_enum_component_tag(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let ident = &input.ident;
     let vis = &input.vis;
 
+    // Extract tag visibility from attributes, defaulting to public
+    let mut tag_visibility = Visibility::Public(Token![pub](Span::call_site()));
+    for attr in &input.attrs {
+        if attr.path().is_ident("tag_visibility") {
+            let mut visibility = None;
+            let _ = attr.parse_nested_meta(|meta| {
+                if let Ok(value) = meta.value() {
+                    visibility = Some(value.parse()?);
+                }
+                Ok(())
+            });
+            if let Some(vis) = visibility {
+                tag_visibility = vis;
+            }
+        }
+    }
+
+    // Ensure the input is an enum
     let Data::Enum(ref data) = input.data else {
-        return syn::Error::new(input.span(), "Cannot derive `EnumTrait` on non-enum type")
+        return syn::Error::new(input.span(), "Cannot derive `EnumComponentTag` on non-enum type")
             .into_compile_error()
             .into();
     };
 
+    // Process variants and their attributes
     let variants_with_attrs = data.variants.iter().map(|variant| {
         let ident = &variant.ident;
         let require_attrs = variant
@@ -55,7 +59,8 @@ pub fn derive_enum_tag(attr: TokenStream, input: TokenStream) -> TokenStream {
                                     }
                                 }
                                 Ok(idents)
-                            }).unwrap_or_default(),
+                            })
+                            .unwrap_or_default(),
                         ),
                         _ => None,
                     }
@@ -68,23 +73,30 @@ pub fn derive_enum_tag(attr: TokenStream, input: TokenStream) -> TokenStream {
         (ident.clone(), require_attrs)
     }).collect::<Vec<(Ident, Vec<Ident>)>>();
 
+    // Generate module name based on enum name
     let mod_ident = format_ident!("{}", ident.to_string().to_case(Case::Snake));
+
+    // Extract variant idents and their required components
     let variant_idents: Vec<_> = variants_with_attrs.iter().map(|(ident, _)| ident).collect();
     let require_idents: Vec<_> = variants_with_attrs.iter().map(|(_, list)| list).collect();
 
+    // Generate the expanded code
     let expanded = quote! {
-        #[derive(bevy::prelude::Component)]
-        #[component(on_add = #ident::enter_hook)]
-        #[component(on_insert = #ident::enter_hook)]
-        #[component(on_remove = #ident::exit_hook)]
-        #input
+        impl bevy::ecs::component::Component for #ident {
+            const STORAGE_TYPE: bevy::ecs::component::StorageType = bevy::ecs::component::StorageType::Table;
+            fn register_component_hooks(hooks: &mut bevy::ecs::component::ComponentHooks) {
+                hooks.on_add(#ident::enter_hook);
+                hooks.on_insert(#ident::enter_hook);
+                hooks.on_remove(#ident::exit_hook);
+            }
+        }
 
         impl #ident {
             fn enter_hook(mut world: bevy::ecs::world::DeferredWorld,
                           entity: bevy::ecs::entity::Entity,
                           _id: bevy::ecs::component::ComponentId) {
                 #(
-                    // remove previously inserted tags, if present
+                    // Remove previously inserted tags, if present
                     if world.entity(entity).get::<#mod_ident::#variant_idents>().is_some() {
                         world.commands().entity(entity).remove::<#mod_ident::#variant_idents>();
                     }

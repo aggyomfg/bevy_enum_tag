@@ -1,19 +1,14 @@
 #[cfg(test)]
 mod tests {
     use bevy::prelude::*;
-    use bevy_enum_tag::derive_enum_tag;
-
-    // #[derive_enum_tag]
-    // enum EmptyEnum {}
 
     #[derive(Component, Default)]
     struct TestComponent;
 
-    // 2nd
     #[derive(Component, Default)]
     struct TestComponent2;
 
-    #[derive_enum_tag(tag_visibility=pub(crate))]
+    #[derive(EnumComponentTag)]
     enum TestEnum {
         #[require(TestComponent)]
         Variant1,
@@ -30,6 +25,7 @@ mod tests {
         commands.spawn(TestEnum::Variant2);
     }
 
+    use bevy_enum_tag::EnumComponentTag;
     use test_enum::Variant1;
     use test_enum::Variant2;
 
