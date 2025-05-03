@@ -133,7 +133,7 @@ pub fn derive_enum_component_tag(input: TokenStream) -> TokenStream {
             use super::*;
 
             #(
-                #[derive(bevy::prelude::Component)]
+                #[derive(bevy::prelude::Component, Clone, Copy)]
                 #[component(on_add = #variant_idents::enter_hook)]
                 #[component(on_insert = #variant_idents::enter_hook)]
                 #[require(#(#require_idents),*)]
