@@ -83,7 +83,7 @@ pub fn derive_enum_component_tag(input: TokenStream) -> TokenStream {
     // Generate the expanded code
     let expanded = quote! {
         impl Component for #ident {
-            const STORAGE_TYPE: bevy::ecs::component::StorageType = bevy::ecs::component::StorageType::Table;
+            const STORAGE_TYPE: bevy::ecs::component::StorageType = bevy::ecs::component::StorageType::SparseSet;
             type Mutability = bevy::ecs::component::Mutable;
             
             fn on_add() -> Option<bevy::ecs::component::ComponentHook> {
@@ -146,6 +146,7 @@ pub fn derive_enum_component_tag(input: TokenStream) -> TokenStream {
 
             #(
                 #[derive(Component)]
+                #[component(storage = "SparseSet")]
                 #[component(on_add = Self::enter_hook)]
                 #[component(on_insert = Self::enter_hook)]
                 #[require(#(#require_idents),*)]
