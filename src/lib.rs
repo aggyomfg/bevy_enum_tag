@@ -145,7 +145,7 @@ pub fn derive_enum_component_tag(input: TokenStream) -> TokenStream {
             use super::*;
 
             #(
-                #[derive(Component)]
+                #[derive(Component, Clone, Copy)]
                 #[component(storage = "SparseSet")]
                 #[component(on_add = Self::enter_hook)]
                 #[component(on_insert = Self::enter_hook)]
