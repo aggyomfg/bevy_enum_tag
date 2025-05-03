@@ -82,19 +82,31 @@ pub fn derive_enum_component_tag(input: TokenStream) -> TokenStream {
 
     // Generate the expanded code
     let expanded = quote! {
-        impl bevy::ecs::component::Component for #ident {
+        impl Component for #ident {
             const STORAGE_TYPE: bevy::ecs::component::StorageType = bevy::ecs::component::StorageType::Table;
-            fn register_component_hooks(hooks: &mut bevy::ecs::component::ComponentHooks) {
-                hooks.on_add(#ident::enter_hook);
-                hooks.on_insert(#ident::enter_hook);
-                hooks.on_remove(#ident::exit_hook);
+            type Mutability = bevy::ecs::component::Mutable;
+            
+            fn on_add() -> Option<bevy::ecs::component::ComponentHook> {
+                Some(#ident::enter_hook)
+            }
+
+            fn on_insert() -> Option<bevy::ecs::component::ComponentHook> {
+                Some(#ident::enter_hook)
+            }
+
+            fn on_remove() -> Option<bevy::ecs::component::ComponentHook> {
+                Some(#ident::exit_hook)
+            }
+
+            fn on_despawn() -> Option<bevy::ecs::component::ComponentHook> {
+                Some(#ident::exit_hook)
             }
         }
 
         impl #ident {
             fn enter_hook(mut world: bevy::ecs::world::DeferredWorld,
-                          entity: bevy::ecs::entity::Entity,
-                          _id: bevy::ecs::component::ComponentId) {
+                          context: bevy::ecs::component::HookContext) {
+                let entity = context.entity;
                 #(
                     // Remove previously inserted tags, if present
                     if world.entity(entity).get::<#mod_ident::#variant_idents>().is_some() {
@@ -114,8 +126,8 @@ pub fn derive_enum_component_tag(input: TokenStream) -> TokenStream {
             }
 
             fn exit_hook(mut world: bevy::ecs::world::DeferredWorld,
-                         entity: bevy::ecs::entity::Entity,
-                         _id: bevy::ecs::component::ComponentId) {
+                        context: bevy::ecs::component::HookContext) {
+                let entity = context.entity;
                 match world.entity(entity).get::<#ident>() {
                     Some(enum_ref) => match enum_ref {
                         #(
@@ -133,16 +145,17 @@ pub fn derive_enum_component_tag(input: TokenStream) -> TokenStream {
             use super::*;
 
             #(
-                #[derive(bevy::prelude::Component)]
-                #[component(on_add = #variant_idents::enter_hook)]
-                #[component(on_insert = #variant_idents::enter_hook)]
+                #[derive(Component)]
+                #[component(on_add = Self::enter_hook)]
+                #[component(on_insert = Self::enter_hook)]
                 #[require(#(#require_idents),*)]
                 #tag_visibility struct #variant_idents;
 
                 impl #variant_idents {
                     fn enter_hook(mut world: bevy::ecs::world::DeferredWorld,
-                                  entity: bevy::ecs::entity::Entity,
-                                  id: bevy::ecs::component::ComponentId) {
+                                  context: bevy::ecs::component::HookContext) {
+                        let entity = context.entity;
+                        let id = context.component_id;
                         if let Some(#ident::#variant_idents {..}) = world.entity(entity).get::<#ident>() {
                         } else {
                             world.commands().entity(entity).remove_by_id(id);
