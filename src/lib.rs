@@ -3,9 +3,7 @@ use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::{format_ident, quote};
 use syn::spanned::Spanned;
-use syn::{
-    parse_macro_input, Data, DeriveInput, Ident, Token, Visibility,
-};
+use syn::{parse_macro_input, Data, DeriveInput, Ident, Token, Visibility};
 
 #[proc_macro_derive(EnumComponentTag, attributes(require, tag_visibility))]
 pub fn derive_enum_component_tag(input: TokenStream) -> TokenStream {
@@ -32,46 +30,53 @@ pub fn derive_enum_component_tag(input: TokenStream) -> TokenStream {
 
     // Ensure the input is an enum
     let Data::Enum(ref data) = input.data else {
-        return syn::Error::new(input.span(), "Cannot derive `EnumComponentTag` on non-enum type")
-            .into_compile_error()
-            .into();
+        return syn::Error::new(
+            input.span(),
+            "Cannot derive `EnumComponentTag` on non-enum type",
+        )
+        .into_compile_error()
+        .into();
     };
 
     // Process variants and their attributes
-    let variants_with_attrs = data.variants.iter().map(|variant| {
-        let ident = &variant.ident;
-        let require_attrs = variant
-            .attrs
-            .iter()
-            .filter_map(|attr| {
-                if attr.path().is_ident("require") {
-                    match attr.meta.require_list() {
-                        Ok(list) => Some(
-                            list.parse_args_with(|input: syn::parse::ParseStream| {
-                                let mut idents = Vec::new();
-                                while !input.is_empty() {
-                                    let path: syn::Path = input.parse()?;
-                                    if let Some(ident) = path.get_ident() {
-                                        idents.push(ident.clone());
+    let variants_with_attrs = data
+        .variants
+        .iter()
+        .map(|variant| {
+            let ident = &variant.ident;
+            let require_attrs = variant
+                .attrs
+                .iter()
+                .filter_map(|attr| {
+                    if attr.path().is_ident("require") {
+                        match attr.meta.require_list() {
+                            Ok(list) => Some(
+                                list.parse_args_with(|input: syn::parse::ParseStream| {
+                                    let mut idents = Vec::new();
+                                    while !input.is_empty() {
+                                        let path: syn::Path = input.parse()?;
+                                        if let Some(ident) = path.get_ident() {
+                                            idents.push(ident.clone());
+                                        }
+                                        if !input.is_empty() {
+                                            input.parse::<Token![,]>()?;
+                                        }
                                     }
-                                    if !input.is_empty() {
-                                        input.parse::<Token![,]>()?;
-                                    }
-                                }
-                                Ok(idents)
-                            })
-                            .unwrap_or_default(),
-                        ),
-                        _ => None,
+                                    Ok(idents)
+                                })
+                                .unwrap_or_default(),
+                            ),
+                            _ => None,
+                        }
+                    } else {
+                        None
                     }
-                } else {
-                    None
-                }
-            })
-            .flatten()
-            .collect::<Vec<_>>();
-        (ident.clone(), require_attrs)
-    }).collect::<Vec<(Ident, Vec<Ident>)>>();
+                })
+                .flatten()
+                .collect::<Vec<_>>();
+            (ident.clone(), require_attrs)
+        })
+        .collect::<Vec<(Ident, Vec<Ident>)>>();
 
     // Generate module name based on enum name
     let mod_ident = format_ident!("{}", ident.to_string().to_case(Case::Snake));
@@ -85,27 +90,27 @@ pub fn derive_enum_component_tag(input: TokenStream) -> TokenStream {
         impl Component for #ident {
             const STORAGE_TYPE: bevy::ecs::component::StorageType = bevy::ecs::component::StorageType::SparseSet;
             type Mutability = bevy::ecs::component::Mutable;
-            
-            fn on_add() -> Option<bevy::ecs::component::ComponentHook> {
+
+            fn on_add() -> Option<bevy::ecs::lifecycle::ComponentHook> {
                 Some(#ident::enter_hook)
             }
 
-            fn on_insert() -> Option<bevy::ecs::component::ComponentHook> {
+            fn on_insert() -> Option<bevy::ecs::lifecycle::ComponentHook> {
                 Some(#ident::enter_hook)
             }
 
-            fn on_remove() -> Option<bevy::ecs::component::ComponentHook> {
+            fn on_remove() -> Option<bevy::ecs::lifecycle::ComponentHook> {
                 Some(#ident::exit_hook)
             }
 
-            fn on_despawn() -> Option<bevy::ecs::component::ComponentHook> {
+            fn on_despawn() -> Option<bevy::ecs::lifecycle::ComponentHook> {
                 Some(#ident::exit_hook)
             }
         }
 
         impl #ident {
             fn enter_hook(mut world: bevy::ecs::world::DeferredWorld,
-                          context: bevy::ecs::component::HookContext) {
+                          context: bevy::ecs::lifecycle::HookContext) {
                 let entity = context.entity;
                 #(
                     // Remove previously inserted tags, if present
@@ -126,7 +131,7 @@ pub fn derive_enum_component_tag(input: TokenStream) -> TokenStream {
             }
 
             fn exit_hook(mut world: bevy::ecs::world::DeferredWorld,
-                        context: bevy::ecs::component::HookContext) {
+                        context: bevy::ecs::lifecycle::HookContext) {
                 let entity = context.entity;
                 match world.entity(entity).get::<#ident>() {
                     Some(enum_ref) => match enum_ref {
@@ -145,7 +150,7 @@ pub fn derive_enum_component_tag(input: TokenStream) -> TokenStream {
             use super::*;
 
             #(
-                #[derive(Component, Clone, Copy)]
+                #[derive(Clone, Component, Copy)]
                 #[component(storage = "SparseSet")]
                 #[component(on_add = Self::enter_hook)]
                 #[component(on_insert = Self::enter_hook)]
@@ -154,7 +159,7 @@ pub fn derive_enum_component_tag(input: TokenStream) -> TokenStream {
 
                 impl #variant_idents {
                     fn enter_hook(mut world: bevy::ecs::world::DeferredWorld,
-                                  context: bevy::ecs::component::HookContext) {
+                                  context: bevy::ecs::lifecycle::HookContext) {
                         let entity = context.entity;
                         let id = context.component_id;
                         if let Some(#ident::#variant_idents {..}) = world.entity(entity).get::<#ident>() {

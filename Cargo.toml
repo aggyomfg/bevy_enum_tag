@@ -1,6 +1,6 @@
 [package]
 name = "bevy_enum_tag"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 
 [lib]
@@ -13,4 +13,4 @@ proc-macro2 = { version = "1.0.95" }
 convert_case = "0.8.0"
 
 [dev-dependencies]
-bevy = { version = "0.16", default-features = false }
+bevy = { version = "0.17", default-features = false }
